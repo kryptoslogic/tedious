@@ -7,6 +7,19 @@ from tedious import Tedious, UIMessage, UIMessageType
 app = Tedious(__name__)
 
 
+@app.entity()
+class Passphrase(maltego.Phrase):
+	"""
+	Like a phrase, but more secret
+	"""
+	
+	id = 'custom.Passphrase'
+	displayName = 'Passphrase'
+	displayNamePlural = 'Passphrases'
+	
+	_fields = {}
+
+
 @app.transform("helloTransform")
 def hello_transform(phrase):
 	"""

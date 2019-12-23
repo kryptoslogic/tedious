@@ -108,3 +108,36 @@ class MaltegoEntity():
 			if prop_value:
 				params[pyname] = parse_value(prop_value[0], properties["type"])
 		return cls(value, **params)
+
+
+	@classmethod
+	def to_entity_xml(cls):
+		me = ET.Element("MaltegoEntity")
+		me.attrib["id"] = cls.id
+		me.attrib["displayName"] = cls.displayName
+		me.attrib["displayNamePlural"] = cls.displayNamePlural
+		me.attrib["description"] = cls.__doc__.strip()
+		
+		parent_id = cls.__mro__[1].id
+		if parent_id is not None:
+			bes = ET.Element("BaseEntities")
+			be = ET.Element("BaseEntity")
+			be.text = parent_id
+			bes.append(be)
+			me.append(bes)
+		
+		props = ET.Element("Properties")
+		fields = ET.Element("Fields")
+		
+		for pyname, properties in cls._fields.items():
+			field = ET.Element("Field")
+			field.attrib["name"] = properties["name"]
+			field.attrib["displayName"] = properties["name"]
+			field.attrib["type"] = "string"
+			field.attrib["nullable"] = "true"
+			fields.append(field)
+		
+		props.append(fields)
+		me.append(props)
+		
+		return me

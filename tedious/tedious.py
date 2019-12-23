@@ -5,6 +5,8 @@ from enum import Enum
 import traceback
 import sys
 import hashlib
+from zipfile import ZipFile
+import io
 
 import tedious.entities as entities
 import tedious.entities.maltego as maltego
@@ -36,6 +38,7 @@ class Tedious(Flask):
 	def __init__(self, import_name, *args, **kwargs):
 		super().__init__(import_name, *args, **kwargs)
 		self.transforms = {}
+		self.entities = []
 		self.add_url_rule("/", view_func=self.hello)
 		self.add_url_rule("/seed", view_func=self.seed)
 		self.add_url_rule("/runner", view_func=self.runner, methods=["GET", "POST"])
@@ -66,8 +69,7 @@ class Tedious(Flask):
 		elif cmd == "_RUN":
 			return self.run_transform(request.args.get("TransformToRun"))
 		elif cmd == "_CONFIG":
-			# TODO: have the option to pass a real config archive
-			return Response(b"", status=200, mimetype='application/octet-stream')
+			return Response(self._build_config_archive(), status=200, mimetype='application/octet-stream')
 	
 	def get_transforms(self):
 		mm = ET.Element("MaltegoMessage")
@@ -179,6 +181,12 @@ class Tedious(Flask):
 			return handler
 		return decorator
 	
+	def entity(self):
+		def decorator(entity):
+			self.entities.append(entity)
+			return entity
+		return decorator
+
 	def _parse_parameter_docstring(self, docstring):
 		if not docstring:
 			return "", {}
@@ -209,3 +217,13 @@ class Tedious(Flask):
 		uid = hashlib.sha256(name.encode()).hexdigest()[:8]
 		
 		return filtered_name + "_" + uid
+
+	def _build_config_archive(self):
+		archive_buf = io.BytesIO()
+		with ZipFile(archive_buf, "w") as archive:
+			for entity_cls in self.entities:
+				with archive.open("Entities/{}.entity".format(entity_cls.id), "w") as f:
+					entity_xml = ET.tostring(entity_cls.to_entity_xml(), pretty_print=True)
+					f.write(entity_xml)
+					print(entity_xml.decode()) # DEBUG
+		return archive_buf.getvalue()
