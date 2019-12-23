@@ -1,4 +1,4 @@
-# tedious [![Inline docs](https://img.shields.io/static/v1?logo=read-the-docs&message=docs&color=8CA1AF)](https://pages.github.com/kryptoslogic/tedious/_build/html/)
+# tedious [![Inline docs](https://img.shields.io/static/v1?logo=read-the-docs&message=docs&color=8CA1AF)](https://kryptoslogic.github.io/tedious/_build/html/)
 
 tedious allows developers, analysts and hackers to quickly write Maltego transforms and expose those transforms to other users without needing to package anything up or manage dependencies. We make everything as simple as we can for the author of the transform so that they don't need to do anything apart from write transform code.
 
