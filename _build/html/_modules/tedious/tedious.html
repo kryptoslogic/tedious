@@ -1,0 +1,396 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>tedious.tedious &mdash; Maltego Entities  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Maltego Entities
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Maltego Entities</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>tedious.tedious</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for tedious.tedious</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">flask</span> <span class="kn">import</span> <span class="n">Flask</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">Response</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">namedtuple</span>
+<span class="kn">import</span> <span class="nn">lxml.etree</span> <span class="k">as</span> <span class="nn">ET</span>
+<span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">hashlib</span>
+
+<span class="kn">import</span> <span class="nn">tedious.entities</span> <span class="k">as</span> <span class="nn">entities</span>
+<span class="kn">import</span> <span class="nn">tedious.entities.maltego</span> <span class="k">as</span> <span class="nn">maltego</span>
+
+
+<span class="c1"># TODO: make this a class</span>
+<span class="n">Transform</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s2">&quot;Transform&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;handler&quot;</span><span class="p">,</span> <span class="s2">&quot;ein&quot;</span><span class="p">,</span> <span class="s2">&quot;eout&quot;</span><span class="p">,</span> <span class="s2">&quot;dispname&quot;</span><span class="p">])</span>
+
+
+<div class="viewcode-block" id="UIMessageType"><a class="viewcode-back" href="../../docs/tedious.html#tedious.tedious.UIMessageType">[docs]</a><span class="k">class</span> <span class="nc">UIMessageType</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+	<span class="n">FATAL_ERROR</span> <span class="o">=</span> <span class="s2">&quot;FatalError&quot;</span> <span class="c1"># Shows in a pop-up message box</span>
+	<span class="n">PARTIAL_ERROR</span> <span class="o">=</span> <span class="s2">&quot;PartialError&quot;</span> <span class="c1"># shows in the Transform Output panel with an Orange font</span>
+	<span class="n">INFORM</span> <span class="o">=</span> <span class="s2">&quot;Inform&quot;</span> <span class="c1"># shows in the Transform Output panel</span>
+	<span class="n">DEBUG</span> <span class="o">=</span> <span class="s2">&quot;Debug&quot;</span> <span class="c1"># shows in the Transform Output panel in a grey font, only if the display filter is adjusted </span></div>
+
+
+<div class="viewcode-block" id="UIMessage"><a class="viewcode-back" href="../../docs/tedious.html#tedious.tedious.UIMessage">[docs]</a><span class="k">class</span> <span class="nc">UIMessage</span><span class="p">():</span>
+	<span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="n">message_type</span><span class="o">=</span><span class="n">UIMessageType</span><span class="o">.</span><span class="n">INFORM</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="n">message</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">message_type</span> <span class="o">=</span> <span class="n">message_type</span>
+	
+<div class="viewcode-block" id="UIMessage.to_xml"><a class="viewcode-back" href="../../docs/tedious.html#tedious.tedious.UIMessage.to_xml">[docs]</a>	<span class="k">def</span> <span class="nf">to_xml</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="n">uimessage</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s2">&quot;UIMessage&quot;</span><span class="p">,</span> <span class="n">MessageType</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">message_type</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+		<span class="n">uimessage</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">message</span>
+		<span class="k">return</span> <span class="n">uimessage</span></div></div>
+
+
+<div class="viewcode-block" id="Tedious"><a class="viewcode-back" href="../../docs/tedious.html#tedious.tedious.Tedious">[docs]</a><span class="k">class</span> <span class="nc">Tedious</span><span class="p">(</span><span class="n">Flask</span><span class="p">):</span>
+	<span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">import_name</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+		<span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">import_name</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">transforms</span> <span class="o">=</span> <span class="p">{}</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">add_url_rule</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">,</span> <span class="n">view_func</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">hello</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">add_url_rule</span><span class="p">(</span><span class="s2">&quot;/seed&quot;</span><span class="p">,</span> <span class="n">view_func</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">add_url_rule</span><span class="p">(</span><span class="s2">&quot;/runner&quot;</span><span class="p">,</span> <span class="n">view_func</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">runner</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;POST&quot;</span><span class="p">])</span>
+	
+<div class="viewcode-block" id="Tedious.hello"><a class="viewcode-back" href="../../docs/tedious.html#tedious.tedious.Tedious.hello">[docs]</a>	<span class="k">def</span> <span class="nf">hello</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="k">return</span> <span class="s2">&quot;hello&quot;</span></div>
+	
+<div class="viewcode-block" id="Tedious.seed"><a class="viewcode-back" href="../../docs/tedious.html#tedious.tedious.Tedious.seed">[docs]</a>	<span class="k">def</span> <span class="nf">seed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="c1"># TODO: Don&#39;t hardcode this</span>
+		<span class="n">output_xml</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;&lt;MaltegoMessage&gt;</span>
+<span class="s2">  &lt;MaltegoTransformDiscoveryMessage source=&quot;PythonTestServer&quot;&gt;</span>
+<span class="s2">    &lt;TransformApplications&gt;</span>
+<span class="s2">      &lt;TransformApplication</span>
+<span class="s2">      name=&quot;tedious Test&quot;</span>
+<span class="s2">      requireAPIKey=&quot;false&quot;</span>
+<span class="s2">      registrationURL=&quot;http://www.paterva.com/web2/NOAPIKEY.html&quot;</span>
+<span class="s2">      URL=&quot;https://localhost:31337/runner&quot;&gt;&lt;/TransformApplication&gt;</span>
+<span class="s2">    &lt;/TransformApplications&gt;</span>
+<span class="s2">    &lt;OtherSeedServers&gt;&lt;/OtherSeedServers&gt;</span>
+<span class="s2">  &lt;/MaltegoTransformDiscoveryMessage&gt;</span>
+<span class="s2">&lt;/MaltegoMessage&gt;&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="n">output_xml</span><span class="p">,</span> <span class="n">mimetype</span><span class="o">=</span><span class="s2">&quot;text/xml&quot;</span><span class="p">)</span></div>
+	
+<div class="viewcode-block" id="Tedious.runner"><a class="viewcode-back" href="../../docs/tedious.html#tedious.tedious.Tedious.runner">[docs]</a>	<span class="k">def</span> <span class="nf">runner</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="n">cmd</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Command&quot;</span><span class="p">)</span>
+		<span class="k">if</span> <span class="n">cmd</span> <span class="o">==</span> <span class="s2">&quot;_TRANSFORMS&quot;</span><span class="p">:</span>
+			<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_transforms</span><span class="p">()</span>
+		<span class="k">elif</span> <span class="n">cmd</span> <span class="o">==</span> <span class="s2">&quot;_RUN&quot;</span><span class="p">:</span>
+			<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_transform</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;TransformToRun&quot;</span><span class="p">))</span>
+		<span class="k">elif</span> <span class="n">cmd</span> <span class="o">==</span> <span class="s2">&quot;_CONFIG&quot;</span><span class="p">:</span>
+			<span class="c1"># TODO: have the option to pass a real config archive</span>
+			<span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">status</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">mimetype</span><span class="o">=</span><span class="s1">&#39;application/octet-stream&#39;</span><span class="p">)</span></div>
+	
+<div class="viewcode-block" id="Tedious.get_transforms"><a class="viewcode-back" href="../../docs/tedious.html#tedious.tedious.Tedious.get_transforms">[docs]</a>	<span class="k">def</span> <span class="nf">get_transforms</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="n">mm</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s2">&quot;MaltegoMessage&quot;</span><span class="p">)</span>
+		<span class="n">mtlm</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s2">&quot;MaltegoTransformListMessage&quot;</span><span class="p">)</span>
+		<span class="n">transforms</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s2">&quot;Transforms&quot;</span><span class="p">)</span>
+		
+		<span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">properties</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">transforms</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+			<span class="n">maindoc</span><span class="p">,</span> <span class="n">paramdoc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_parameter_docstring</span><span class="p">(</span><span class="n">properties</span><span class="o">.</span><span class="n">handler</span><span class="o">.</span><span class="vm">__doc__</span><span class="p">)</span>
+			
+			<span class="n">t</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s2">&quot;Transform&quot;</span><span class="p">)</span>
+			<span class="n">t</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s2">&quot;Owner&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Example Owner&quot;</span>
+			<span class="n">t</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s2">&quot;Description&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">maindoc</span>
+			<span class="n">t</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s2">&quot;UIDisplayName&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">properties</span><span class="o">.</span><span class="n">dispname</span>
+			<span class="n">t</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s2">&quot;Author&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Example Author&quot;</span>
+			<span class="n">t</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s2">&quot;TransformName&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">name</span>
+			
+			<span class="n">t</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s2">&quot;Version&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;0&quot;</span>
+			<span class="n">t</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s2">&quot;MaxEntityInputCount&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;0&quot;</span>
+			<span class="n">t</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s2">&quot;MaxEntityOutputCount&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;0&quot;</span>
+			<span class="n">t</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s2">&quot;LocationRelevance&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;global&quot;</span>
+			
+			<span class="n">outents</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s2">&quot;OutputEntities&quot;</span><span class="p">)</span>
+			<span class="n">outent</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s2">&quot;OutputEntity&quot;</span><span class="p">)</span>
+			<span class="n">outent</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">properties</span><span class="o">.</span><span class="n">eout</span><span class="o">.</span><span class="n">id</span>
+			<span class="n">outents</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">outent</span><span class="p">)</span>
+			<span class="n">t</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">outents</span><span class="p">)</span>
+			
+			<span class="k">if</span> <span class="n">properties</span><span class="o">.</span><span class="n">handler</span><span class="o">.</span><span class="vm">__kwdefaults__</span><span class="p">:</span>
+				<span class="n">inreqs</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s2">&quot;UIInputRequirements&quot;</span><span class="p">)</span>
+				<span class="k">for</span> <span class="n">argname</span><span class="p">,</span> <span class="n">argdefault</span> <span class="ow">in</span> <span class="n">properties</span><span class="o">.</span><span class="n">handler</span><span class="o">.</span><span class="vm">__kwdefaults__</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+					<span class="n">inreqs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ET</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s2">&quot;Input&quot;</span><span class="p">,</span>
+						<span class="n">Name</span><span class="o">=</span><span class="n">argname</span><span class="p">,</span>
+						<span class="n">Type</span><span class="o">=</span><span class="s2">&quot;string&quot;</span><span class="p">,</span>
+						<span class="n">Display</span><span class="o">=</span><span class="n">paramdoc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">argname</span><span class="p">,</span> <span class="n">argname</span><span class="p">),</span>
+						<span class="n">DefaultValue</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">argdefault</span><span class="p">),</span>
+						<span class="n">Optional</span><span class="o">=</span><span class="s2">&quot;False&quot;</span><span class="p">,</span>
+						<span class="n">Popup</span><span class="o">=</span><span class="s2">&quot;True&quot;</span><span class="p">))</span>
+				<span class="n">t</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">inreqs</span><span class="p">)</span>
+			
+			<span class="n">inent</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s2">&quot;InputEntity&quot;</span><span class="p">)</span>
+			<span class="n">inent</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">properties</span><span class="o">.</span><span class="n">ein</span><span class="o">.</span><span class="n">id</span>
+			<span class="n">t</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">inent</span><span class="p">)</span>
+			
+			<span class="n">transforms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+		
+		<span class="n">mtlm</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">transforms</span><span class="p">)</span>
+		<span class="n">mm</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mtlm</span><span class="p">)</span>
+		<span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="n">ET</span><span class="o">.</span><span class="n">tostring</span><span class="p">(</span><span class="n">mm</span><span class="p">,</span> <span class="n">pretty_print</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">mimetype</span><span class="o">=</span><span class="s2">&quot;text/xml&quot;</span><span class="p">)</span></div>
+	
+<div class="viewcode-block" id="Tedious.run_transform"><a class="viewcode-back" href="../../docs/tedious.html#tedious.tedious.Tedious.run_transform">[docs]</a>	<span class="k">def</span> <span class="nf">run_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+		<span class="n">transform</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transforms</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+		
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+			<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">[debug] TRANSFORM REQUEST:&quot;</span><span class="p">)</span>
+			<span class="nb">print</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">decode</span><span class="p">())</span>
+		
+		<span class="n">request_xml</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">fromstring</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+		<span class="c1"># TODO support multiple request entities</span>
+		<span class="n">request_entity</span> <span class="o">=</span> <span class="n">request_xml</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;MaltegoTransformRequestMessage/Entities/Entity&quot;</span><span class="p">)</span>
+		<span class="n">request_object</span> <span class="o">=</span> <span class="n">transform</span><span class="o">.</span><span class="n">ein</span><span class="o">.</span><span class="n">from_xml</span><span class="p">(</span><span class="n">request_entity</span><span class="p">)</span>
+		<span class="n">request_fields</span> <span class="o">=</span> <span class="p">{</span><span class="n">field</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s2">&quot;Name&quot;</span><span class="p">]:</span> <span class="n">field</span><span class="o">.</span><span class="n">text</span>
+			<span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">request_xml</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s2">&quot;MaltegoTransformRequestMessage/TransformFields/Field&quot;</span><span class="p">)}</span>
+		
+		<span class="n">response</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s2">&quot;MaltegoMessage&quot;</span><span class="p">)</span>
+		<span class="n">respmsg</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s2">&quot;MaltegoTransformResponseMessage&quot;</span><span class="p">)</span>
+		<span class="n">entities</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s2">&quot;Entities&quot;</span><span class="p">)</span>
+		<span class="n">messages</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s2">&quot;UIMessages&quot;</span><span class="p">)</span>
+		
+		<span class="k">try</span><span class="p">:</span>
+			<span class="c1"># actually do the transform</span>
+			<span class="n">result</span> <span class="o">=</span> <span class="n">transform</span><span class="o">.</span><span class="n">handler</span><span class="p">(</span><span class="n">request_object</span><span class="p">,</span> <span class="o">**</span><span class="n">request_fields</span><span class="p">)</span>
+			<span class="k">try</span><span class="p">:</span>
+				<span class="n">result_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+			<span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+				<span class="n">result_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">result</span><span class="p">]</span>
+			
+			<span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">result_list</span><span class="p">:</span>
+				<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">UIMessage</span><span class="p">):</span>
+					<span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">to_xml</span><span class="p">())</span>
+				<span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="s2">&quot;to_xml&quot;</span><span class="p">):</span>
+					<span class="n">entities</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">to_xml</span><span class="p">())</span>
+				<span class="k">else</span><span class="p">:</span>
+					<span class="c1"># TODO: proper logging</span>
+					<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;WARNING: unable to serialise entity: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">result</span><span class="p">))</span>
+		
+		<span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+			<span class="n">error_text</span> <span class="o">=</span> <span class="s2">&quot;[Tedious] A Python exception occured while executing the transform:</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+			<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+				<span class="n">error_text</span> <span class="o">+=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">traceback</span><span class="o">.</span><span class="n">format_exception</span><span class="p">(</span><span class="o">*</span><span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">()))</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="n">error_text</span> <span class="o">+=</span> <span class="s2">&quot;Set FLASK_DEBUG=1 to enable backtraces.&quot;</span>
+			<span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">UIMessage</span><span class="p">(</span><span class="n">error_text</span><span class="p">,</span> <span class="n">UIMessageType</span><span class="o">.</span><span class="n">FATAL_ERROR</span><span class="p">)</span><span class="o">.</span><span class="n">to_xml</span><span class="p">())</span>
+		
+		<span class="n">respmsg</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">entities</span><span class="p">)</span>
+		<span class="n">respmsg</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">messages</span><span class="p">)</span>
+		<span class="n">response</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">respmsg</span><span class="p">)</span>
+		
+		<span class="n">resp</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">tostring</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="n">pretty_print</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+		
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+			<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">[debug] TRANSFORM RESPONSE:&quot;</span><span class="p">)</span>
+			<span class="nb">print</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">decode</span><span class="p">())</span>
+		
+		<span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="n">resp</span><span class="p">,</span> <span class="n">mimetype</span><span class="o">=</span><span class="s2">&quot;text/xml&quot;</span><span class="p">)</span></div>
+	
+<div class="viewcode-block" id="Tedious.transform"><a class="viewcode-back" href="../../docs/tedious.html#tedious.tedious.Tedious.transform">[docs]</a>	<span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">ein</span><span class="o">=</span><span class="n">maltego</span><span class="o">.</span><span class="n">Phrase</span><span class="p">,</span> <span class="n">eout</span><span class="o">=</span><span class="n">maltego</span><span class="o">.</span><span class="n">Phrase</span><span class="p">):</span>
+		<span class="k">def</span> <span class="nf">decorator</span><span class="p">(</span><span class="n">handler</span><span class="p">):</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">transforms</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_normalize_name</span><span class="p">(</span><span class="n">name</span><span class="p">)]</span> <span class="o">=</span> <span class="n">Transform</span><span class="p">(</span><span class="n">handler</span><span class="p">,</span> <span class="n">ein</span><span class="p">,</span> <span class="n">eout</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+			<span class="k">return</span> <span class="n">handler</span>
+		<span class="k">return</span> <span class="n">decorator</span></div>
+	
+	<span class="k">def</span> <span class="nf">_parse_parameter_docstring</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">docstring</span><span class="p">):</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="n">docstring</span><span class="p">:</span>
+			<span class="k">return</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="p">{}</span>
+
+		<span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">docstring</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)]</span>
+		<span class="k">if</span> <span class="s2">&quot;&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+			<span class="k">return</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">),</span> <span class="p">{}</span>
+
+		<span class="n">maindoc</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">[:</span><span class="n">lines</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)])</span>
+		<span class="n">paramdoc</span> <span class="o">=</span> <span class="p">{}</span>
+		<span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">lines</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">:]:</span>
+			<span class="n">argname</span><span class="p">,</span> <span class="n">argdoc</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
+			<span class="n">paramdoc</span><span class="p">[</span><span class="n">argname</span><span class="p">]</span> <span class="o">=</span> <span class="n">argdoc</span>
+
+		<span class="k">return</span> <span class="n">maindoc</span><span class="p">,</span> <span class="n">paramdoc</span>
+	
+	<span class="k">def</span> <span class="nf">_normalize_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+		<span class="c1"># non-alphanumeric chars that are still allowed</span>
+		<span class="n">whitelist</span> <span class="o">=</span> <span class="s2">&quot;_-&quot;</span>
+		
+		<span class="c1"># Remove non-ascii chars, replace spaces with underscores</span>
+		<span class="n">norm_name</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;ascii&quot;</span><span class="p">,</span> <span class="s2">&quot;ignore&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span><span class="p">)</span>
+		
+		<span class="c1"># Remove non-alphanumeric chars</span>
+		<span class="n">filtered_name</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">isalnum</span><span class="p">()</span> <span class="ow">or</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">whitelist</span><span class="p">,</span> <span class="n">norm_name</span><span class="p">))</span>
+		
+		<span class="c1"># Prevent accidental name collisions</span>
+		<span class="n">uid</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()[:</span><span class="mi">8</span><span class="p">]</span>
+		
+		<span class="k">return</span> <span class="n">filtered_name</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="n">uid</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Kryptos Logic
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

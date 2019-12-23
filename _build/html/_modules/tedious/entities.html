@@ -1,0 +1,295 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>tedious.entities &mdash; Maltego Entities  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Maltego Entities
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Maltego Entities</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>tedious.entities</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for tedious.entities</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">lxml.etree</span> <span class="k">as</span> <span class="nn">ET</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Unlike the contents of the maltego submodule, this module has been written</span>
+<span class="sd">by a real human!</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">entity_map</span> <span class="o">=</span> <span class="p">{}</span> <span class="c1"># every imported entity class adds itself to this dict (not actually used for anything yet...)</span>
+
+
+<div class="viewcode-block" id="stringify_value"><a class="viewcode-back" href="../../docs/tedious.entities.html#tedious.entities.stringify_value">[docs]</a><span class="k">def</span> <span class="nf">stringify_value</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span> <span class="c1"># TODO make robust</span>
+	<span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="parse_value"><a class="viewcode-back" href="../../docs/tedious.entities.html#tedious.entities.parse_value">[docs]</a><span class="k">def</span> <span class="nf">parse_value</span><span class="p">(</span><span class="n">value_string</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span> <span class="c1"># TODO make robust</span>
+	<span class="k">return</span> <span class="n">value_string</span></div>
+
+
+<div class="viewcode-block" id="MaltegoEntity"><a class="viewcode-back" href="../../docs/tedious.entities.html#tedious.entities.MaltegoEntity">[docs]</a><span class="k">class</span> <span class="nc">MaltegoEntity</span><span class="p">():</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Base class that represents a Maltego Entity.</span>
+<span class="sd">	All other entities inherit from this.</span>
+<span class="sd">	</span>
+<span class="sd">	Provides methods for encoding and decoding from `&lt;Entity&gt;` XML Objects.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="nb">id</span> <span class="o">=</span> <span class="kc">None</span>
+	<span class="n">displayName</span> <span class="o">=</span> <span class="kc">None</span>
+	<span class="n">displayNamePlural</span> <span class="o">=</span> <span class="kc">None</span>
+	<span class="n">value</span> <span class="o">=</span> <span class="kc">None</span>
+	
+	<span class="n">weight</span> <span class="o">=</span> <span class="kc">None</span>
+	<span class="n">display_information</span> <span class="o">=</span> <span class="p">{}</span>
+	<span class="n">additional_fields</span> <span class="o">=</span> <span class="p">{}</span>
+	<span class="n">icon_url</span> <span class="o">=</span> <span class="kc">None</span>
+	
+	<span class="n">_fields</span> <span class="o">=</span> <span class="p">{}</span>
+	
+	<span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">weight</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;weight&quot;</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">display_information</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;display_information&quot;</span><span class="p">,</span> <span class="p">{})</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">additional_fields</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;additional_fields&quot;</span><span class="p">,</span> <span class="p">{})</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">icon_url</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;icon_url&quot;</span><span class="p">)</span>
+	
+	<span class="nd">@classmethod</span>
+	<span class="k">def</span> <span class="nf">_get_fields</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Merge _fields metadata from parent classes</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">fields</span> <span class="o">=</span> <span class="p">{}</span>
+		<span class="k">for</span> <span class="n">parent_class</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__mro__</span><span class="p">:</span>
+			<span class="k">if</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">parent_class</span><span class="p">,</span> <span class="n">MaltegoEntity</span><span class="p">):</span>
+				<span class="n">fields</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">parent_class</span><span class="o">.</span><span class="n">_fields</span><span class="p">)</span>
+		<span class="k">return</span> <span class="n">fields</span>
+	
+<div class="viewcode-block" id="MaltegoEntity.to_xml"><a class="viewcode-back" href="../../docs/tedious.entities.html#tedious.entities.MaltegoEntity.to_xml">[docs]</a>	<span class="k">def</span> <span class="nf">to_xml</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="n">entity</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s2">&quot;Entity&quot;</span><span class="p">,</span> <span class="n">Type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+		
+		<span class="n">value</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s2">&quot;Value&quot;</span><span class="p">)</span>
+		<span class="n">value</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+		<span class="n">entity</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+		
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="n">weight</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s2">&quot;Weight&quot;</span><span class="p">)</span>
+			<span class="n">weight</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="p">)</span>
+			<span class="n">entity</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">weight</span><span class="p">)</span>
+		
+		<span class="n">fields</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s2">&quot;AdditionalFields&quot;</span><span class="p">)</span>
+		<span class="k">for</span> <span class="n">pyname</span><span class="p">,</span> <span class="n">properties</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_fields</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+			<span class="n">field_value</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pyname</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+			<span class="k">if</span> <span class="n">field_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+				<span class="n">field</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s2">&quot;Field&quot;</span><span class="p">,</span> <span class="n">Name</span><span class="o">=</span><span class="n">properties</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">])</span>
+				<span class="n">field</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">stringify_value</span><span class="p">(</span><span class="n">field_value</span><span class="p">,</span> <span class="n">properties</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">])</span>
+				<span class="n">fields</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">field</span><span class="p">)</span>
+		
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">additional_fields</span><span class="p">:</span>
+			<span class="k">for</span> <span class="n">field_name</span><span class="p">,</span> <span class="n">field_value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">additional_fields</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+				<span class="n">field</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s2">&quot;Field&quot;</span><span class="p">,</span> <span class="n">Name</span><span class="o">=</span><span class="n">field_name</span><span class="p">,</span> <span class="n">DisplayName</span><span class="o">=</span><span class="n">field_name</span><span class="p">)</span>
+				<span class="n">field</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">field_value</span>
+				<span class="n">fields</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">field</span><span class="p">)</span>
+		
+		<span class="n">entity</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fields</span><span class="p">)</span>
+		
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">display_information</span><span class="p">:</span>
+			<span class="n">di</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s2">&quot;DisplayInformation&quot;</span><span class="p">)</span>
+			<span class="k">for</span> <span class="n">label_name</span><span class="p">,</span> <span class="n">label_html</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">display_information</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+				<span class="n">label</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s2">&quot;Label&quot;</span><span class="p">,</span> <span class="n">Name</span><span class="o">=</span><span class="n">label_name</span><span class="p">,</span> <span class="n">Type</span><span class="o">=</span><span class="s2">&quot;text/html&quot;</span><span class="p">)</span>
+				<span class="n">label</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">label_html</span>
+				<span class="n">di</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
+			<span class="n">entity</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">di</span><span class="p">)</span>
+		
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">icon_url</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="n">iconurl</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s2">&quot;IconURL&quot;</span><span class="p">)</span>
+			<span class="n">iconurl</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">icon_url</span>
+			<span class="n">entity</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">iconurl</span><span class="p">)</span>
+		
+		<span class="k">return</span> <span class="n">entity</span></div>
+	
+<div class="viewcode-block" id="MaltegoEntity.from_xml"><a class="viewcode-back" href="../../docs/tedious.entities.html#tedious.entities.MaltegoEntity.from_xml">[docs]</a>	<span class="nd">@classmethod</span>
+	<span class="k">def</span> <span class="nf">from_xml</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">entity_xml</span><span class="p">):</span>
+		<span class="n">entity_type</span> <span class="o">=</span> <span class="n">entity_xml</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s2">&quot;Type&quot;</span><span class="p">]</span>
+		<span class="c1">#assert(self.id.endswith(entity_type))</span>
+		<span class="n">value</span> <span class="o">=</span> <span class="n">entity_xml</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;Value&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">text</span>
+		<span class="n">params</span> <span class="o">=</span> <span class="p">{}</span>
+		<span class="k">for</span> <span class="n">pyname</span><span class="p">,</span> <span class="n">properties</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_get_fields</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span> <span class="c1"># this implementation is not optimal</span>
+			<span class="n">prop_value</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span><span class="o">.</span><span class="n">text</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">entity_xml</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s2">&quot;AdditionalFields/Field&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s2">&quot;Name&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">properties</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]]</span>
+			<span class="k">if</span> <span class="n">prop_value</span><span class="p">:</span>
+				<span class="n">params</span><span class="p">[</span><span class="n">pyname</span><span class="p">]</span> <span class="o">=</span> <span class="n">parse_value</span><span class="p">(</span><span class="n">prop_value</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">properties</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">])</span>
+		<span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="o">**</span><span class="n">params</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Kryptos Logic
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
