@@ -14,6 +14,7 @@ tedious allows developers, analysts and hackers to quickly write Maltego transfo
 ## Example Setup
 ```sh
 pip install -r requirements.txt
+python3 setup.py install
 cd examples
 ./self_sign.sh # generates SSL certificates
 python3 server.py
